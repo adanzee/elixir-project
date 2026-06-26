@@ -3,7 +3,8 @@ defmodule Vidsync.Meetings do
 
   def create_room(hostname) do
     id = Uniq.UUID.uuid4()
-    %Room{id: id, host_name: hostname}
-
+    room = %Room{id: id, host_name: hostname}
+    DynamicSupervisor.start_child(Vidsync.Meetings.RoomSupervisor, {Vidsync.Meetings.RoomServer, room})
+    room
   end
 end

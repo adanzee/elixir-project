@@ -11,6 +11,8 @@ defmodule Vidsync.Application do
       VidsyncWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:vidsync, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Vidsync.PubSub},
+      {Registry, keys: :unique, name: Vidsync.RoomRegistry},
+      {DynamicSupervisor, strategy: :one_for_one, name: Vidsync.Meetings.RoomSupervisor},
       # Start a worker by calling: Vidsync.Worker.start_link(arg)
       # {Vidsync.Worker, arg},
       # Start to serve requests, typically the last entry
