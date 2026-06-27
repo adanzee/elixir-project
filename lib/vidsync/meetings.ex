@@ -7,4 +7,9 @@ defmodule Vidsync.Meetings do
     DynamicSupervisor.start_child(Vidsync.Meetings.RoomSupervisor, {Vidsync.Meetings.RoomServer, room})
     room
   end
+
+  #helper function
+  def get_room(room_id) do
+    Vidsync.Meetings.RoomServer.get_state(room_id)
+  end
 end

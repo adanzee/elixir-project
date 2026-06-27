@@ -10,6 +10,9 @@ defmodule Vidsync.Meetings.RoomServer do
   def start_link(room = %Room{}) do
     GenServer.start_link(__MODULE__, room , [name: via_tuple(room.id)])
   end
+  def get_state(room_id) do
+    GenServer.call(via_tuple(room_id), :get_state)
+  end
 
   @impl true
   def init(room) do
@@ -20,4 +23,6 @@ defmodule Vidsync.Meetings.RoomServer do
   def handle_call(:get_state, _from, current_room_state) do
     {:reply, current_room_state, current_room_state}
   end
+
+
 end
