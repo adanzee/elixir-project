@@ -26,10 +26,104 @@ import {hooks as colocatedHooks} from "phoenix-colocated/vidsync"
 import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+
+let customHooks = {}
+customHooks.WebRTCSignaling = {
+  async mounted() {
+    // intial
+    this.roomId = this.el.dataset.roomId;
+    this.localStream = null;
+    this.peerConnection = null;
+    // hardware capture
+    try {
+          // to get both Audio and Video first
+      this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    } catch (error) {
+      console.warn("Camera failed or denied. Trying audio-only fallback...", error);
+      try {
+        // audio if the camera isn't available
+        this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      } catch (audioError) {
+        // Both failed 
+        console.error("Both camera and microphone access were denied.", audioError);
+      }
+    }
+
+    // everything yoooo
+    if (this.localStream) {
+      let local_video = document.getElementById("local-video");
+      local_video.srcObject = this.localStream;
+    }
+    // channel connection and listner
+    this.socket = new Socket("/socket", {params: {}})
+    this.socket.connect()
+    // intializing the channel 
+    this.channel = this.socket.channel(`room:${this.roomId}`, {})
+    //joining the channel 
+    this.channel.join().receive("ok", () => 
+      this.initWebRTC()
+    )
+    this.channel.on("video_offer", async(payload) => {
+      await this.peerConnection.setRomoteDescription(new RTCSessionDescription(payload))
+      const answer = await this.peerConnection.createAnswer()
+      await this.peerConnection.setLocalDescription(answer)
+      this.channel.push("video_answer", answer)
+    })
+    this.channel.on("video_answer", async(payload) => {
+      await this.peerConnection.setRomoteDescription(new RTCSessionDescription(payload))
+    })
+    this.channel.on("ice_candidate", async(payload) => {
+      if (payload) {
+        await this.peerConnection.addIceCandidate(new RTCIceCandidate(payload))
+
+      }
+    })
+  }, 
+
+  initWebRTC(){
+    // peer engine mechanics
+    this.peerConnection = new RTCPeerConnection({
+      iceServers: [{urls: "stun:stun.l.google.com:19302"
+      }]
+    })
+    this.localStream.getTracks().forEach(track =>{
+      this.peerConnection.addTrack(track, this.localStream)
+
+    }
+      )
+      // capturing remote video streams 
+      this.peerConnection.ontrack = (event) => {
+        let remote_video = document.getElementById("remote-video")
+        remote_video.srcObject = event.streams[0]
+
+      }
+      //ice network paths 
+      this.peerConnection.onicecandidate = (event) => {
+        if(event.candidate){
+          this.channel.push("ice_candidate", event.candidate)
+      }
+      }
+  },
+  destroyed(){
+    // resource cleanup 
+    if(this.localStream){
+      this.localStream.getTracks().forEach(track => track.stop())
+    }
+    // checking connection 
+    if(this.peerConnection){
+      this.peerConnection.close()
+    }
+    if(this.channel){
+      this.channel.leave()
+    }
+  }
+}
+
+
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...colocatedHooks, ...customHooks},
 })
 
 // Show progress bar on live navigation and form submits
