@@ -10,6 +10,7 @@ defmodule VidsyncWeb.RoomChannel do
     {:ok, socket}
   end
 
+
   def handle_in("peer_joined", payload, socket) do
     IO.inspect(payload, label: "📣 PEER JOINED SIGNAL RECEIVED")
     broadcast_from!(socket, "peer_joined", payload)

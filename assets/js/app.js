@@ -20,7 +20,7 @@ customHooks.WebRTCSignaling = {
     this.peerConnection = null;
     
     // Strict Perfect Negotiation Coordination Parameters
-    this.isPolite = true; // Newcomers default to polite
+    this.isPolite = true; 
     this.makingOffer = false;
     this.ignoreOffer = false;
     this.isSettingRemoteDescription = false; 
@@ -33,7 +33,7 @@ customHooks.WebRTCSignaling = {
       ]
     };
 
-    // Monitor layout visibility state transitions to prevent zero-size canvas freezing
+  
     this.observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.attributeName === "class") {
@@ -83,7 +83,7 @@ customHooks.WebRTCSignaling = {
     this.channel.on("peer_joined", (payload) => {
       console.log(`Remote occupant arrived: ${payload.username}. Scheduling media negotiation...`);
       
-      // Since we were already here to see them arrive, WE are the Host (Impolite/Priority)
+      
       this.isPolite = false; 
       
       if (this.peerConnection) {
@@ -213,8 +213,7 @@ customHooks.WebRTCSignaling = {
 
     this.peerConnection.onnegotiationneeded = async () => {
       try {
-        // 🚨 EMERGENCY DEMO LOCK: If the user is Bob (the guest), 
-        // block him from generating an offer! Let Alice do it.
+
         if (this.username.toLowerCase() === "bob") {
           console.log("Demo Lock: Bob is the guest. Waiting for Alice's priority offer...");
           return;
