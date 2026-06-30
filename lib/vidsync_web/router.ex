@@ -18,6 +18,8 @@ defmodule VidsyncWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    live "/room/:id", RoomLive, :index
+    live "/meeting/:uuid", MeetingRoomLive, :index
   end
 
   # Other scopes may use custom stacks.

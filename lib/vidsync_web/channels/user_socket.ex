@@ -3,12 +3,12 @@ defmodule VidsyncWeb.UserSocket do
   channel "room:*", VidsyncWeb.RoomChannel
 
   @impl true
-  def connect(params, socket, _connect_info) do
+  def connect(_params, socket, _connect_info) do
     {:ok, socket}
   end
 
   @impl true
-  def id(socket) do
+  def id(_socket) do
     nil
   end
 
